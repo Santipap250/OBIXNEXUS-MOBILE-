@@ -61,7 +61,6 @@ export default function Home({ drones, profile, go, openDrone }) {
                     <div className="absolute top-[5.25rem] right-1.5">
                       <StatusPill status={d.status} />
                     </div>
-                  </div>
                   <div className="text-[13px] font-semibold text-white">{d.name}</div>
                   <div className="text-[10px] text-white/40 mb-1.5">{d.type}</div>
                   <div className="flex items-center gap-1 text-[11px] text-white/60">
