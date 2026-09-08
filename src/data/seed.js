@@ -79,6 +79,8 @@ export const seedTools = [
   { id: "blackbox", name: "Blackbox Analyzer", desc: "วิเคราะห์ไฟล์ Blackbox หลังการบิน", cat: "Analysis", status: "READY", icon: Radar, color: "cyan" },
   { id: "battery", name: "Battery Analyzer", desc: "ติดตามสุขภาพแบตเตอรี่ตามรอบการบิน", cat: "Data", status: "BETA", icon: Battery, color: "green" },
   { id: "vtx", name: "VTX Tools", desc: "จัดการช่องสัญญาณและกำลังส่ง", cat: "Config", status: "COMING SOON", icon: Wifi, color: "amber" },
+  { id: "motorprop", name: "Motor / Prop Match", desc: "ตรวจความเข้ากันได้ของมอเตอร์ ใบพัด และแบตเตอรี่", cat: "Config", status: "READY", icon: Gauge, color: "cyan" },
+  { id: "thrustplanner", name: "Weight / Thrust Planner", desc: "ตั้งเป้าแรงขับจากน้ำหนักและสไตล์การบิน", cat: "Analysis", status: "READY", icon: Activity, color: "green" },
 ];
 
 export const seedPosts = [

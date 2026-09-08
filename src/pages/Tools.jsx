@@ -1,7 +1,18 @@
-import React, { useState } from "react";
-import { Search, Check, Star } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { Search, Star, Calculator, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { GlassCard, ScreenHeader } from "../components/ui.jsx";
 import { seedTools, colorMap, toolStatusColor } from "../data/seed.js";
+import {
+  FLIGHT_PROFILES,
+  assessMotorProp,
+  calculateBattery,
+  calculateThrust,
+  fpvDefaults,
+  recommendPid,
+  recommendVtx,
+} from "../lib/fpvEngine.js";
+
+const profileOptions = Object.keys(FLIGHT_PROFILES);
 
 export default function Tools({ favorites, toggleFavorite }) {
   const [cat, setCat] = useState("All");
@@ -18,12 +29,10 @@ export default function Tools({ favorites, toggleFavorite }) {
       <div className="px-5">
         <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 mb-3">
           <Search size={14} className="text-white/30" />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ค้นหาเครื่องมือ..." className="bg-transparent outline-none text-sm text-white w-full placeholder:text-white/25" />
+          <input aria-label="ค้นหาเครื่องมือ" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ค้นหาเครื่องมือ..." className="bg-transparent outline-none text-sm text-white w-full placeholder:text-white/25" />
         </div>
         <div className="flex gap-2 mb-4 overflow-x-auto -mx-5 px-5">
-          {cats.map((c) => (
-            <button key={c} onClick={() => setCat(c)} className={`text-xs px-3.5 py-1.5 rounded-full whitespace-nowrap border ${cat === c ? "bg-cyan-400 text-[#050b14] border-cyan-400 font-semibold" : "border-white/10 text-white/50"}`}>{c}</button>
-          ))}
+          {cats.map((c) => <button type="button" key={c} onClick={() => setCat(c)} className={`text-xs px-3.5 py-1.5 rounded-full whitespace-nowrap border ${cat === c ? "bg-cyan-400 text-[#050b14] border-cyan-400 font-semibold" : "border-white/10 text-white/50"}`}>{c}</button>)}
         </div>
         <div className="space-y-2.5">
           {list.map((t) => {
@@ -31,17 +40,10 @@ export default function Tools({ favorites, toggleFavorite }) {
             const Icon = t.icon;
             const fav = favorites.includes(t.id);
             return (
-              <GlassCard key={t.id} onClick={() => setOpenTool(t)} className="p-3.5 flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl ${c.soft} flex items-center justify-center shrink-0`}>
-                  <Icon size={18} className={c.text} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[13px] font-semibold text-white">{t.name}</div>
-                  <div className="text-[11px] text-white/40 truncate">{t.desc}</div>
-                </div>
-                <button onClick={(e) => { e.stopPropagation(); toggleFavorite(t.id); }} className="shrink-0 text-white/25">
-                  <Star size={15} fill={fav ? "#fbbf24" : "none"} className={fav ? "text-amber-400" : ""} />
-                </button>
+              <GlassCard key={t.id} aria-label={`เปิดเครื่องมือ ${t.name}`} onClick={() => setOpenTool(t)} className="p-3.5 flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl ${c.soft} flex items-center justify-center shrink-0`}><Icon size={18} className={c.text} /></div>
+                <div className="flex-1 min-w-0"><div className="text-[13px] font-semibold text-white">{t.name}</div><div className="text-[11px] text-white/40 truncate">{t.desc}</div></div>
+                <button type="button" aria-label={`${fav ? "ยกเลิกดาว" : "เพิ่มดาวให้"} ${t.name}`} onClick={(e) => { e.stopPropagation(); toggleFavorite(t.id); }} className="shrink-0 text-white/25"><Star size={15} fill={fav ? "#fbbf24" : "none"} className={fav ? "text-amber-400" : ""} /></button>
                 <span className={`text-[9px] px-2 py-1 rounded-full border shrink-0 ${toolStatusColor[t.status]}`}>{t.status}</span>
               </GlassCard>
             );
@@ -53,72 +55,80 @@ export default function Tools({ favorites, toggleFavorite }) {
   );
 }
 
+function Field({ label, value, onChange, type = "number", options }) {
+  return <label className="block text-[11px] text-white/50">{label}
+    {options ? <select value={value} onChange={(e) => onChange(e.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-[#0b1928] px-2.5 py-2 text-sm text-white outline-none">{options.map((option) => <option key={option} value={option}>{option}</option>)}</select> : <input type={type} min={type === "number" ? "0" : undefined} value={value} onChange={(e) => onChange(type === "number" ? e.target.value : e.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-sm text-white outline-none focus:border-cyan-400/50" />}
+  </label>;
+}
+
+function ResultBlock({ result, kind = "good" }) {
+  if (!result) return null;
+  if (result.valid === false) return <div className="rounded-xl border border-amber-400/25 bg-amber-400/10 p-3 text-xs text-amber-300"><AlertTriangle size={15} className="mb-1" />{result.reason}</div>;
+  const statusClass = result.status === "GOOD" ? "text-emerald-400 border-emerald-400/30 bg-emerald-400/10" : result.status === "CAUTION" ? "text-amber-300 border-amber-400/30 bg-amber-400/10" : "text-red-300 border-red-400/30 bg-red-400/10";
+  return <div className="space-y-3">
+    {result.status && <div className={`rounded-xl border p-3 text-sm font-semibold ${statusClass}`}>{result.status === "GOOD" ? <CheckCircle2 size={16} className="inline mr-1" /> : <AlertTriangle size={16} className="inline mr-1" />}{result.status}</div>}
+    <GlassCard className="p-3.5"><div className="text-xs text-white/40 mb-2">ผลลัพธ์โดยประมาณ</div>
+      {kind === "battery" && <MetricGrid items={[["Nominal voltage", `${result.nominalVoltage.toFixed(1)} V`], ["Energy", `${result.energyWh.toFixed(2)} Wh`], ["Usable energy", `${result.usableEnergyWh.toFixed(2)} Wh`], ["Max theoretical current", `${result.maxTheoreticalCurrentA.toFixed(1)} A`], ["Flight-time range", result.rangeMinutes ? `${result.rangeMinutes[0].toFixed(0)}–${result.rangeMinutes[1].toFixed(0)} min` : "ใส่กระแสเฉลี่ย"]]} />}
+      {kind === "thrust" && <MetricGrid items={[["AUW", `${result.auwGrams.toFixed(0)} g`], ["Target ratio", `${result.targetRatio}:1`], ["Total target thrust", `${result.totalTargetGrams.toFixed(0)} g`], ["Per-motor target", `${result.perMotorTargetGrams.toFixed(0)} g`]]} />}
+      {kind === "pid" && <MetricGrid items={[["Profile", result.profile], ["P", result.p], ["I", result.i], ["D", result.d], ["Rates", result.rates]]} />}
+      {kind === "vtx" && <MetricGrid items={[["Range", result.range], ["Environment", result.environment], ["Suggested power", result.suggestedPower]]} />}
+      {kind === "motor" && <><div className="text-sm text-white/80">{result.explanation}</div>{result.issues?.map((item) => <div key={item} className="mt-2 text-xs text-red-300">• {item}</div>)}{result.notes?.map((item) => <div key={item} className="mt-2 text-xs text-white/50">• {item}</div>)}</>}
+    </GlassCard>
+    {result.explanation && kind !== "motor" && <div><div className="text-xs font-semibold text-white/70 mb-1">ทำไมผลลัพธ์นี้</div><p className="text-xs text-white/50 leading-relaxed">{result.explanation}</p></div>}
+    {result.disclaimer && <p className="text-[11px] text-amber-300/80 leading-relaxed">หมายเหตุ: {result.disclaimer}</p>}
+    {result.assumptions && <div><div className="text-xs font-semibold text-white/70 mb-1">สมมติฐาน</div>{result.assumptions.map((item) => <p key={item} className="text-[11px] text-white/45 leading-relaxed">• {item}</p>)}</div>}
+    {result.notes && kind === "vtx" && <div><div className="text-xs font-semibold text-white/70 mb-1">ข้อควรระวัง</div>{result.notes.map((item) => <p key={item} className="text-[11px] text-white/45 leading-relaxed">• {item}</p>)}</div>}
+  </div>;
+}
+
+function MetricGrid({ items }) { return <div className="grid grid-cols-2 gap-2">{items.map(([label, value]) => <div key={label} className="rounded-lg bg-white/5 p-2"><div className="text-[10px] text-white/35">{label}</div><div className="text-sm font-semibold text-cyan-300 mt-0.5">{value}</div></div>)}</div>; }
+
 function ToolDetail({ tool, onBack, favorites, toggleFavorite }) {
-  const [running, setRunning] = useState(false);
-  const [score, setScore] = useState(null);
   const c = colorMap[tool.color];
   const Icon = tool.icon;
   const fav = favorites.includes(tool.id);
-  return (
-    <div className="pb-4">
-      <ScreenHeader
-        title={tool.name}
-        onBack={onBack}
-        right={
-          <button onClick={() => toggleFavorite(tool.id)} className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-            <Star size={15} fill={fav ? "#fbbf24" : "none"} className={fav ? "text-amber-400" : "text-white/40"} />
-          </button>
-        }
-      />
-      <div className="px-5">
-        <GlassCard className="p-4 mb-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className={`w-11 h-11 rounded-xl ${c.soft} flex items-center justify-center`}>
-              <Icon size={20} className={c.text} />
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-white">{tool.name}</div>
-              <span className={`text-[9px] px-2 py-0.5 rounded-full border ${toolStatusColor[tool.status] || ""}`}>{tool.status}</span>
-            </div>
-          </div>
-          <p className="text-[12px] text-white/50 leading-relaxed">{tool.desc}</p>
-        </GlassCard>
-
-        {tool.id === "configdoctor" ? (
-          <>
-            <div className="grid grid-cols-2 gap-2.5 mb-3">
-              <button className="py-3 rounded-xl border border-white/10 bg-white/5 text-xs text-white/70">วาง CLI</button>
-              <button className="py-3 rounded-xl border border-white/10 bg-white/5 text-xs text-white/70">อัปโหลดไฟล์ CLI</button>
-            </div>
-            <button
-              onClick={() => { setRunning(true); setScore(null); setTimeout(() => { setRunning(false); setScore(92); }, 1100); }}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-[#050b14] text-sm font-semibold mb-4"
-            >
-              {running ? "กำลังวิเคราะห์..." : "วิเคราะห์การตั้งค่า (Demo)"}
-            </button>
-            {score !== null && (
-              <>
-                <GlassCard className="p-4 mb-3 text-center">
-                  <div className="text-[11px] text-white/40 mb-1">Configuration Health</div>
-                  <div className="text-3xl font-bold text-emerald-400">{score}<span className="text-base text-white/30"> / 100</span></div>
-                </GlassCard>
-                <div className="grid grid-cols-2 gap-2">
-                  {["PID", "Filters", "Rates", "RPM Filter", "DShot", "Motor", "Battery", "VTX", "Receiver", "Safety"].map((k) => (
-                    <div key={k} className="flex items-center gap-1.5 text-[11px] text-white/60 bg-white/5 rounded-lg px-2.5 py-2">
-                      <Check size={12} className="text-emerald-400 shrink-0" /> {k}
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </>
-        ) : (
-          <div className="text-center py-16 text-white/30 text-sm">
-            <Icon size={28} className="mx-auto mb-3 opacity-40" />
-            {tool.status === "COMING SOON" ? "เครื่องมือนี้กำลังจะเปิดให้ใช้งานเร็วๆ นี้" : "โหมดทดลอง — ฟีเจอร์เต็มรูปแบบกำลังพัฒนา ไม่ต้องเข้าสู่ระบบ"}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  return <div className="pb-4">
+    <ScreenHeader title={tool.name} onBack={onBack} right={<button type="button" aria-label={`${fav ? "ยกเลิกดาว" : "เพิ่มดาว"} ${tool.name}`} onClick={() => toggleFavorite(tool.id)} className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center"><Star size={15} fill={fav ? "#fbbf24" : "none"} className={fav ? "text-amber-400" : "text-white/40"} /></button>} />
+    <div className="px-5"><GlassCard className="p-4 mb-4"><div className="flex items-center gap-3 mb-2"><div className={`w-11 h-11 rounded-xl ${c.soft} flex items-center justify-center`}><Icon size={20} className={c.text} /></div><div><div className="text-sm font-semibold text-white">{tool.name}</div><span className={`text-[9px] px-2 py-0.5 rounded-full border ${toolStatusColor[tool.status] || ""}`}>{tool.status}</span></div></div><p className="text-[12px] text-white/50 leading-relaxed">{tool.desc}</p></GlassCard><ToolPanel toolId={tool.id} /></div>
+  </div>;
 }
+
+function ToolPanel({ toolId }) {
+  if (toolId === "battery") return <BatteryPanel />;
+  if (toolId === "obixcore" || toolId === "pidadvisor") return <PidPanel />;
+  if (toolId === "vtx") return <VtxPanel />;
+  if (toolId === "configfpv" || toolId === "motorprop") return <MotorPanel />;
+  if (toolId === "configdoctor" || toolId === "thrustplanner") return <ThrustPanel />;
+  return <div className="text-center py-16 text-white/30 text-sm"><Calculator size={28} className="mx-auto mb-3 opacity-40" />เครื่องมือนี้กำลังพัฒนา โดยผลลัพธ์ที่เพิ่มในอนาคตจะอ้างอิงข้อมูลที่ผู้ใช้ป้อนและระบุสมมติฐานอย่างชัดเจน</div>;
+}
+
+function BatteryPanel() {
+  const [form, setForm] = useState(fpvDefaults.battery); const [result, setResult] = useState(null); const update = (key) => (value) => setForm({ ...form, [key]: value });
+  return <Panel title="Battery Calculator" description="คำนวณแรงดัน พลังงาน และช่วงเวลาโดยประมาณจากข้อมูลแบตเตอรี่"><div className="grid grid-cols-2 gap-2.5"><Field label="Cells (S)" value={form.cellCount} onChange={update("cellCount")} /><Field label="Capacity (mAh)" value={form.capacityMah} onChange={update("capacityMah")} /><Field label="C rating" value={form.cRating} onChange={update("cRating")} /><Field label="Safety margin (%)" value={form.safetyMargin} onChange={update("safetyMargin")} /><Field label="Average current (A)" value={form.averageCurrentA} onChange={update("averageCurrentA")} /></div><CalculateButton onClick={() => setResult(calculateBattery(form))} /> <ResultBlock result={result} kind="battery" /></Panel>;
+}
+
+function MotorPanel() {
+  const [form, setForm] = useState(fpvDefaults.motorProp); const [result, setResult] = useState(null); const update = (key) => (value) => setForm({ ...form, [key]: value });
+  return <Panel title="Motor / Prop Compatibility" description="heuristic ตรวจความเข้ากันได้เบื้องต้น ไม่แทน thrust table"><div className="grid grid-cols-2 gap-2.5"><Field label="Battery cells" value={form.cellCount} onChange={update("cellCount")} /><Field label="Motor KV" value={form.motorKv} onChange={update("motorKv")} /><Field label="Motor size" value={form.motorSize} type="text" onChange={update("motorSize")} /><Field label="Prop diameter (in)" value={form.propDiameter} onChange={update("propDiameter")} /><Field label="Prop pitch (in)" value={form.propPitch} onChange={update("propPitch")} /><Field label="Blade count" value={form.bladeCount} onChange={update("bladeCount")} /></div><Field label="Drone class" value={form.category} onChange={update("category")} type="text" /><CalculateButton onClick={() => setResult(assessMotorProp(form))} /><ResultBlock result={result} kind="motor" /></Panel>;
+}
+
+function ThrustPanel() {
+  const [form, setForm] = useState(fpvDefaults.thrust); const [result, setResult] = useState(null); const update = (key) => (value) => setForm({ ...form, [key]: value });
+  return <Panel title="Weight / Thrust Estimate" description="ตั้งเป้าแรงขับรวมและแรงขับต่อมอเตอร์ตาม flight profile"><div className="grid grid-cols-2 gap-2.5"><Field label="AUW (g)" value={form.auwGrams} onChange={update("auwGrams")} /><Field label="Motor count" value={form.motorCount} onChange={update("motorCount")} /></div><Field label="Flight profile" value={form.profile} onChange={update("profile")} options={profileOptions} /><CalculateButton onClick={() => setResult(calculateThrust(form))} /><ResultBlock result={result} kind="thrust" /></Panel>;
+}
+
+function PidPanel() {
+  const [profile, setProfile] = useState("Freestyle"); const starting = useMemo(() => recommendPid(profile), [profile]);
+  const [values, setValues] = useState({ p: starting.p, i: starting.i, d: starting.d });
+  const changeProfile = (next) => { setProfile(next); const nextStarting = recommendPid(next); setValues({ p: nextStarting.p, i: nextStarting.i, d: nextStarting.d }); };
+  const result = { ...starting, ...values };
+  return <Panel title="PID / Rates Starting Point" description="ค่า conservative สำหรับเริ่มต้นและแก้ไขต่อได้ตาม build จริง"><Field label="Flight profile" value={profile} onChange={changeProfile} options={profileOptions} /><div className="grid grid-cols-3 gap-2.5 mt-3"><Field label="P" value={values.p} onChange={(value) => setValues({ ...values, p: value })} /><Field label="I" value={values.i} onChange={(value) => setValues({ ...values, i: value })} /><Field label="D" value={values.d} onChange={(value) => setValues({ ...values, d: value })} /></div><ResultBlock result={result} kind="pid" /></Panel>;
+}
+
+function VtxPanel() {
+  const [range, setRange] = useState("Medium"); const [environment, setEnvironment] = useState("Open"); const [legalPower, setLegalPower] = useState("unknown"); const result = useMemo(() => recommendVtx({ desiredRange: range, environment, legalPower }), [range, environment, legalPower]);
+  return <Panel title="VTX Helper" description="เลือกกำลังเชิงระดับตามระยะและสภาพแวดล้อม โดยไม่อ้างสิทธิ์แทนกฎหมายท้องถิ่น"><Field label="Desired range" value={range} onChange={setRange} options={["Short", "Medium", "Long"]} /><Field label="Environment" value={environment} onChange={setEnvironment} options={["Open", "Urban", "Indoor"]} /><Field label="Legal power status" value={legalPower} onChange={setLegalPower} options={["unknown", "checked locally"]} /><ResultBlock result={result} kind="vtx" /></Panel>;
+}
+
+function Panel({ title, description, children }) { return <GlassCard className="p-4"><div className="text-sm font-semibold text-white">{title}</div><p className="text-[11px] text-white/45 leading-relaxed mt-1 mb-4">{description}</p>{children}</GlassCard>; }
+function CalculateButton({ onClick }) { return <button type="button" onClick={onClick} className="w-full mt-4 mb-4 py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-[#050b14] text-sm font-semibold">คำนวณ</button>; }
