@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import { Cpu } from "lucide-react";
 import { GlassCard, ScreenHeader, Timeline, DroneVisual } from "../components/ui.jsx";
-import { colorMap } from "../data/seed.js";
 
 export default function DigitalTwin({ drone, onBack }) {
   const [tab, setTab] = useState("timeline");
-  const c = colorMap[drone.color];
   const parts = [
     { n: "Flight Controller", s: "ปกติ" }, { n: "ESC", s: "ปกติ" }, { n: "มอเตอร์ x4", s: "ปกติ" },
     { n: "VTX", s: "ปกติ" }, { n: "กล้อง", s: "ปกติ" }, { n: "ใบพัด", s: "ควรตรวจสอบ" },

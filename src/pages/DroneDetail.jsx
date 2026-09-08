@@ -52,7 +52,7 @@ export default function DroneDetail({ drone, onBack, goTwin }) {
 
             <div className="grid grid-cols-2 gap-2.5">
               {["Analyze", "Tune", "Config", "Blackbox"].map((a) => (
-                <button key={a} className="py-2.5 rounded-xl border border-white/10 bg-white/5 text-xs text-white/70 active:scale-[0.97] transition-transform">{a}</button>
+                <button type="button" key={a} onClick={() => setTab(a === "Blackbox" ? "blackbox" : a === "Config" || a === "Tune" ? "config" : "overview")} className="py-2.5 rounded-xl border border-white/10 bg-white/5 text-xs text-white/70 active:scale-[0.97] transition-transform">{a}</button>
               ))}
             </div>
             <button onClick={() => goTwin(drone)} className={`w-full mt-2.5 py-3 rounded-xl bg-gradient-to-r ${c.grad} text-[#050b14] text-sm font-semibold flex items-center justify-center gap-1.5`}>

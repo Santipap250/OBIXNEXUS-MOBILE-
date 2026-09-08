@@ -2,11 +2,20 @@ import React from "react";
 import { ChevronRight, ArrowLeft, Bell, Menu, Radar, Home, Wrench, Bot, Users } from "lucide-react";
 import { statusColor, colorMap } from "../data/seed.js";
 
-export function GlassCard({ children, className = "", onClick, glow }) {
+export function GlassCard({ children, className = "", onClick, glow, "aria-label": ariaLabel }) {
   return (
     <div
       onClick={onClick}
-      className={`rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl ${glow || ""} ${onClick ? "active:scale-[0.98] transition-transform cursor-pointer" : ""} ${className}`}
+      onKeyDown={onClick ? (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick(event);
+        }
+      } : undefined}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      aria-label={ariaLabel}
+      className={`rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl ${glow || ""} ${onClick ? "active:scale-[0.98] transition-transform cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70" : ""} ${className}`}
     >
       {children}
     </div>
@@ -65,13 +74,13 @@ export function TopBar({ title = "OBIX NEXUS", onMenu, onBell, sub }) {
       </div>
       <div className="flex items-center gap-3">
         {onBell && (
-          <button onClick={onBell} className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60">
+          <button type="button" aria-label="การแจ้งเตือน" onClick={onBell} className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60">
             <Bell size={15} />
           </button>
         )}
-        <button onClick={onMenu} className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60">
+        {onMenu && <button type="button" aria-label="เปิดการตั้งค่า" onClick={onMenu} className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60">
           <Menu size={15} />
-        </button>
+        </button>}
       </div>
     </div>
   );
@@ -137,7 +146,7 @@ export function BottomNav({ screen, go }) {
       {items.map((it) => {
         const active = screen === it.k;
         return (
-          <button key={it.k} onClick={() => go(it.k)} className="flex flex-col items-center gap-1 px-3 py-1 min-w-[52px] relative">
+            <button type="button" aria-label={`ไปยัง${it.l}`} key={it.k} onClick={() => go(it.k)} className="flex flex-col items-center gap-1 px-3 py-1 min-w-[52px] relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70 rounded-lg">
             {active && <span className="absolute -top-2 w-8 h-0.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />}
             <it.icon size={19} className={active ? "text-cyan-400" : "text-white/35"} />
             <span className={`text-[9px] ${active ? "text-cyan-400 font-medium" : "text-white/35"}`}>{it.l}</span>

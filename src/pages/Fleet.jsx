@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Search, Plus, Trash2 } from "lucide-react";
 import { GlassCard, StatusPill, ScreenHeader, DroneVisual } from "../components/ui.jsx";
-import { colorMap } from "../data/seed.js";
 
 export default function Fleet({ drones, setDrones, openDrone }) {
   const [filter, setFilter] = useState("all");
@@ -74,15 +73,16 @@ export default function Fleet({ drones, setDrones, openDrone }) {
 
         <div className="grid grid-cols-2 gap-3">
           {filtered.map((d) => {
-            const c = colorMap[d.color];
             return (
-              <GlassCard key={d.id} onClick={() => openDrone(d)} className="p-3">
+              <GlassCard key={d.id} aria-label={`เปิดรายละเอียด ${d.name}`} onClick={() => openDrone(d)} className="p-3">
                 <DroneVisual drone={d} className="h-28 mb-2" />
                 <div className="text-[12px] font-semibold text-white truncate">{d.name}</div>
                 <div className="text-[10px] text-white/40 mb-1.5 truncate">{d.type}</div>
                 <div className="flex items-center justify-between">
                   <StatusPill status={d.status} />
                   <button
+                    type="button"
+                    aria-label={`ลบ ${d.name}`}
                     onClick={(e) => { e.stopPropagation(); setDrones(drones.filter((x) => x.id !== d.id)); }}
                     className="text-white/20 active:text-red-400"
                   >

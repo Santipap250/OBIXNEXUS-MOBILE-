@@ -6,7 +6,7 @@ import { seedTools, colorMap } from "../data/seed.js";
 export default function Home({ drones, profile, go, openDrone }) {
   return (
     <div className="pb-4">
-      <TopBar onBell={() => {}} onMenu={() => go("settings")} />
+      <TopBar onMenu={() => go("settings")} />
       <div className="px-5 pt-2">
         <div className="text-lg font-bold text-white">สวัสดี, {profile.name}</div>
         <div className="text-sm text-white/40 mt-0.5">พร้อมจัดการโดรนของคุณหรือยัง?</div>
@@ -56,7 +56,7 @@ export default function Home({ drones, profile, go, openDrone }) {
             {drones.map((d) => {
               const c = colorMap[d.color];
               return (
-                <GlassCard key={d.id} onClick={() => openDrone(d)} className="min-w-[168px] p-3 snap-start">
+                <GlassCard key={d.id} aria-label={`เปิดรายละเอียด ${d.name}`} onClick={() => openDrone(d)} className="min-w-[168px] p-3 snap-start">
                   <DroneVisual drone={d} className="h-20 mb-2" />
                     <div className="absolute top-[5.25rem] right-1.5">
                       <StatusPill status={d.status} />
@@ -74,7 +74,7 @@ export default function Home({ drones, profile, go, openDrone }) {
       </div>
 
       <div className="px-5 mt-5">
-        <GlassCard onClick={() => go("ai")} className="p-4 bg-gradient-to-br from-cyan-400/10 to-blue-500/5" glow="shadow-[0_0_20px_rgba(34,211,238,0.1)]">
+        <GlassCard aria-label="เปิด NEXUS AI" onClick={() => go("ai")} className="p-4 bg-gradient-to-br from-cyan-400/10 to-blue-500/5" glow="shadow-[0_0_20px_rgba(34,211,238,0.1)]">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center shrink-0">
               <Bot size={20} className="text-[#050b14]" />
@@ -87,7 +87,7 @@ export default function Home({ drones, profile, go, openDrone }) {
               <div className="text-[11px] text-white/45 leading-snug mt-0.5">ผู้ช่วยอัจฉริยะสำหรับการวิเคราะห์โดรนของคุณ ไม่ต้องเข้าสู่ระบบ</div>
             </div>
           </div>
-          <button className="mt-3 w-full py-2 rounded-lg bg-cyan-400 text-[#050b14] text-xs font-semibold flex items-center justify-center gap-1">
+          <button type="button" onClick={() => go("ai")} className="mt-3 w-full py-2 rounded-lg bg-cyan-400 text-[#050b14] text-xs font-semibold flex items-center justify-center gap-1">
             เริ่มใช้งาน <ChevronRight size={13} />
           </button>
         </GlassCard>

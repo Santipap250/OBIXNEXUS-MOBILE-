@@ -54,7 +54,6 @@ export default function AIAssistant() {
                           <div key={s} className="flex items-center gap-1.5 text-[12px] text-white/60"><Check size={12} className="text-emerald-400" /> {s}</div>
                         ))}
                       </div>
-                      <button className="w-full mt-3 py-2 rounded-lg bg-cyan-400 text-[#050b14] text-xs font-semibold">ดูรายละเอียดเพิ่มเติม</button>
                     </>
                   )}
                 </GlassCard>
