@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Radar, Cpu } from "lucide-react";
-import { GlassCard, ScreenHeader, Timeline } from "../components/ui.jsx";
+import { Cpu } from "lucide-react";
+import { GlassCard, ScreenHeader, Timeline, DroneVisual } from "../components/ui.jsx";
 import { colorMap } from "../data/seed.js";
 
 export default function DigitalTwin({ drone, onBack }) {
@@ -15,9 +15,7 @@ export default function DigitalTwin({ drone, onBack }) {
     <div className="pb-4">
       <ScreenHeader title="Digital Twin" onBack={onBack} />
       <div className="px-5">
-        <div className={`h-44 rounded-2xl bg-gradient-to-br ${c.grad} opacity-90 flex items-center justify-center relative mb-1`}>
-          <Radar size={64} className="text-[#050b14]/30" />
-        </div>
+        <DroneVisual drone={drone} className="h-48 mb-1" />
         <div className="text-center mb-4">
           <div className="text-sm font-bold text-white">{drone.name}</div>
           <div className="text-[11px] text-white/40">{drone.type} · {drone.cell}</div>

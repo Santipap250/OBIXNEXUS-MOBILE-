@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Battery, Zap, Gauge, Thermometer, Activity, Clock, Radar, Layers, ChevronRight } from "lucide-react";
-import { GlassCard, StatusPill, ScreenHeader, MiniChart, Timeline } from "../components/ui.jsx";
+import { GlassCard, StatusPill, ScreenHeader, MiniChart, Timeline, DroneVisual } from "../components/ui.jsx";
 import { colorMap } from "../data/seed.js";
 
 export default function DroneDetail({ drone, onBack, goTwin }) {
@@ -10,8 +10,8 @@ export default function DroneDetail({ drone, onBack, goTwin }) {
     <div className="pb-4">
       <ScreenHeader title={drone.name} onBack={onBack} />
       <div className="px-5">
-        <div className={`h-36 rounded-2xl bg-gradient-to-br ${c.grad} opacity-90 flex items-center justify-center relative mb-3`}>
-          <Radar size={54} className="text-[#050b14]/30" />
+        <div className="relative mb-3">
+          <DroneVisual drone={drone} className="h-44" />
           <div className="absolute top-3 right-3"><StatusPill status={drone.status} /></div>
           <div className="absolute bottom-3 left-3 text-[#050b14]">
             <div className="text-sm font-bold">{drone.type}</div>

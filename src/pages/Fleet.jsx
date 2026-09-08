@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Search, Plus, Trash2, Radar } from "lucide-react";
-import { GlassCard, StatusPill, ScreenHeader } from "../components/ui.jsx";
+import { Search, Plus, Trash2 } from "lucide-react";
+import { GlassCard, StatusPill, ScreenHeader, DroneVisual } from "../components/ui.jsx";
 import { colorMap } from "../data/seed.js";
 
 export default function Fleet({ drones, setDrones, openDrone }) {
@@ -77,9 +77,7 @@ export default function Fleet({ drones, setDrones, openDrone }) {
             const c = colorMap[d.color];
             return (
               <GlassCard key={d.id} onClick={() => openDrone(d)} className="p-3">
-                <div className={`h-16 rounded-lg bg-gradient-to-br ${c.grad} opacity-90 flex items-center justify-center mb-2 relative`}>
-                  <Radar size={24} className="text-[#050b14]/40" />
-                </div>
+                <DroneVisual drone={d} className="h-28 mb-2" />
                 <div className="text-[12px] font-semibold text-white truncate">{d.name}</div>
                 <div className="text-[10px] text-white/40 mb-1.5 truncate">{d.type}</div>
                 <div className="flex items-center justify-between">

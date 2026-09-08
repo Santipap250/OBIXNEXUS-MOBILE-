@@ -1,6 +1,6 @@
 import React from "react";
 import { Zap, Battery, Bot, ChevronRight, Radar } from "lucide-react";
-import { GlassCard, StatusPill, SectionLabel, TopBar } from "../components/ui.jsx";
+import { GlassCard, StatusPill, SectionLabel, TopBar, DroneVisual } from "../components/ui.jsx";
 import { seedTools, colorMap } from "../data/seed.js";
 
 export default function Home({ drones, profile, go, openDrone }) {
@@ -57,9 +57,8 @@ export default function Home({ drones, profile, go, openDrone }) {
               const c = colorMap[d.color];
               return (
                 <GlassCard key={d.id} onClick={() => openDrone(d)} className="min-w-[168px] p-3 snap-start">
-                  <div className={`h-20 rounded-xl bg-gradient-to-br ${c.grad} opacity-90 mb-2 flex items-center justify-center relative overflow-hidden`}>
-                    <Radar size={30} className="text-[#050b14]/40" />
-                    <div className="absolute top-1.5 right-1.5">
+                  <DroneVisual drone={d} className="h-20 mb-2" />
+                    <div className="absolute top-[5.25rem] right-1.5">
                       <StatusPill status={d.status} />
                     </div>
                   </div>
