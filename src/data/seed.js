@@ -18,6 +18,7 @@ export const defaultDrones = [
     firmware: "Betaflight 4.5.1",
     lastFlight: "2 ชม.ที่แล้ว",
     color: "cyan",
+    image: "/images/apex-5.svg",
     history: [
       { t: "2025-06-14 14:32", label: "Build", detail: "Build #12 - เปลี่ยน ESC", dot: "cyan" },
       { t: "2025-06-13 09:15", label: "Config", detail: "ปรับ PID และ Filter", dot: "amber" },
@@ -41,6 +42,7 @@ export const defaultDrones = [
     firmware: "Betaflight 4.5.0",
     lastFlight: "เมื่อวาน",
     color: "violet",
+    image: "/images/ghost-cine.svg",
     history: [
       { t: "2025-06-09 18:00", label: "Build", detail: "ประกอบใหม่ทั้งหมด", dot: "cyan" },
       { t: "2025-06-08 11:20", label: "Config", detail: "ตั้งค่ากล้องและ VTX", dot: "amber" },
@@ -61,6 +63,7 @@ export const defaultDrones = [
     firmware: "Betaflight 4.4.3",
     lastFlight: "3 วันที่แล้ว",
     color: "amber",
+    image: "/images/toothpick.svg",
     history: [
       { t: "2025-06-05 09:00", label: "Maintenance", detail: "เปลี่ยนใบพัดใหม่", dot: "amber" },
     ],
