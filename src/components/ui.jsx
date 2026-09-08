@@ -35,13 +35,29 @@ export function SectionLabel({ children, action, onAction }) {
   );
 }
 
+export function ObixMark({ className = "w-7 h-7" }) {
+  return (
+    <div className={`${className} relative rounded-lg bg-gradient-to-br from-cyan-300 via-cyan-400 to-blue-600 flex items-center justify-center shadow-[0_0_18px_rgba(34,211,238,0.28)]`} aria-hidden="true">
+      <span className="absolute w-3.5 h-3.5 border-[2px] border-[#04101b] rotate-45 rounded-[3px]" />
+      <span className="absolute w-1 h-3.5 bg-[#04101b] rounded-full rotate-45" />
+    </div>
+  );
+}
+
+export function DroneVisual({ drone, className = "" }) {
+  return (
+    <div className={`relative overflow-hidden rounded-2xl bg-[#06131f] ${className}`}>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(34,211,238,.22),transparent_55%)]" />
+      <img src={drone.image || "/images/apex-5.svg"} alt={`${drone.name} FPV drone`} className="relative h-full w-full object-cover object-center" loading="lazy" decoding="async" />
+    </div>
+  );
+}
+
 export function TopBar({ title = "OBIX NEXUS", onMenu, onBell, sub }) {
   return (
     <div className="flex items-center justify-between px-5 pt-5 pb-2">
       <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center">
-          <Radar size={14} className="text-[#050b14]" />
-        </div>
+        <ObixMark />
         <div>
           <div className="text-[13px] font-bold tracking-wide text-white leading-none">{title}</div>
           {sub && <div className="text-[9px] tracking-[0.2em] text-white/30 mt-0.5">{sub}</div>}
