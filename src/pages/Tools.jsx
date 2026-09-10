@@ -11,6 +11,7 @@ import {
   recommendPid,
   recommendVtx,
 } from "../lib/fpvEngine.js";
+import { analyzeBlackboxText } from "../lib/blackbox/analyzer.js";
 
 const profileOptions = Object.keys(FLIGHT_PROFILES);
 
@@ -97,6 +98,7 @@ function ToolPanel({ toolId }) {
   if (toolId === "battery") return <BatteryPanel />;
   if (toolId === "obixcore" || toolId === "pidadvisor") return <PidPanel />;
   if (toolId === "vtx") return <VtxPanel />;
+  if (toolId === "blackbox") return <BlackboxPanel />;
   if (toolId === "configfpv" || toolId === "motorprop") return <MotorPanel />;
   if (toolId === "configdoctor" || toolId === "thrustplanner") return <ThrustPanel />;
   return <div className="text-center py-16 text-white/30 text-sm"><Calculator size={28} className="mx-auto mb-3 opacity-40" />เครื่องมือนี้กำลังพัฒนา โดยผลลัพธ์ที่เพิ่มในอนาคตจะอ้างอิงข้อมูลที่ผู้ใช้ป้อนและระบุสมมติฐานอย่างชัดเจน</div>;
@@ -129,6 +131,43 @@ function VtxPanel() {
   const [range, setRange] = useState("Medium"); const [environment, setEnvironment] = useState("Open"); const [legalPower, setLegalPower] = useState("unknown"); const result = useMemo(() => recommendVtx({ desiredRange: range, environment, legalPower }), [range, environment, legalPower]);
   return <Panel title="VTX Helper" description="เลือกกำลังเชิงระดับตามระยะและสภาพแวดล้อม โดยไม่อ้างสิทธิ์แทนกฎหมายท้องถิ่น"><Field label="Desired range" value={range} onChange={setRange} options={["Short", "Medium", "Long"]} /><Field label="Environment" value={environment} onChange={setEnvironment} options={["Open", "Urban", "Indoor"]} /><Field label="Legal power status" value={legalPower} onChange={setLegalPower} options={["unknown", "checked locally"]} /><ResultBlock result={result} kind="vtx" /></Panel>;
 }
+
+function BlackboxPanel() {
+  const [fileInfo, setFileInfo] = useState(null);
+  const [result, setResult] = useState(null);
+  const [parsing, setParsing] = useState(false);
+
+  async function handleFile(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setParsing(true);
+    setResult(null);
+    setFileInfo({ name: file.name, size: file.size, status: "กำลังอ่านไฟล์ภายในเครื่อง..." });
+    try {
+      const text = await file.slice(0, 5 * 1024 * 1024).text();
+      const analysis = analyzeBlackboxText(file.name, text);
+      setResult(analysis);
+      setFileInfo({ name: file.name, size: file.size, status: analysis.ok ? "วิเคราะห์สำเร็จ" : "วิเคราะห์ไม่สำเร็จ" });
+    } catch (error) {
+      setResult({ ok: false, error: "อ่านไฟล์ไม่สำเร็จ กรุณาลองไฟล์ text/CSV อื่น" });
+      setFileInfo({ name: file.name, size: file.size, status: "เกิดข้อผิดพลาด" });
+    } finally {
+      setParsing(false);
+    }
+  }
+
+  return <Panel title="Local Blackbox Analyzer" description="เลือกไฟล์จากอุปกรณ์เพื่อวิเคราะห์ภายในเครื่องเท่านั้น ไฟล์จะไม่ถูกอัปโหลด"><label className="block rounded-xl border border-dashed border-cyan-400/35 bg-cyan-400/5 p-4 text-center cursor-pointer"><input type="file" accept=".csv,.bbl,.txt,text/csv,text/plain" onChange={handleFile} className="sr-only" /><div className="text-sm font-semibold text-cyan-300">เลือกไฟล์ Blackbox</div><div className="text-[11px] text-white/40 mt-1">รองรับ CSV และ text export; binary .bbl จะแจ้งว่าไม่รองรับ</div></label>{fileInfo && <div className="mt-3 rounded-xl bg-white/5 p-3 text-xs"><div className="font-semibold text-white truncate">{fileInfo.name}</div><div className="text-white/45 mt-1">{formatBytes(fileInfo.size)} · {fileInfo.status}</div></div>}{parsing && <div className="mt-3 text-xs text-cyan-300">กำลัง parse ข้อมูล...</div>}{result && (result.ok ? <BlackboxReport result={result} /> : <div className="mt-3 rounded-xl border border-red-400/25 bg-red-400/10 p-3 text-xs text-red-200">{result.error}</div>)}</Panel>;
+}
+
+function BlackboxReport({ result }) {
+  const { metrics } = result;
+  const health = result.diagnostics.some((finding) => finding.status === "INDICATOR") ? "🟡 ตรวจสอบเพิ่มเติม" : "🟢 ไม่พบ indicator รุนแรง";
+  return <div className="mt-4 space-y-3"><div className="rounded-xl border border-white/10 bg-white/5 p-3"><div className="text-[10px] text-white/40">BLACKBOX HEALTH</div><div className="text-sm font-semibold text-white mt-1">{health}</div><div className="text-[11px] text-white/45 mt-1">{result.format.format} · {metrics.sampleCount.toLocaleString()} samples{metrics.durationSeconds ? ` · ${metrics.durationSeconds.toFixed(2)} s` : ""}{metrics.sampleRateHz ? ` · ${metrics.sampleRateHz.toFixed(0)} Hz` : ""}</div></div><MetricGrid items={[["Gyro", metricSummary(metrics.gyro)], ["Throttle", metricSummary(metrics.throttle)], ["Motor output", metricSummary(metrics.motorOutput)], ["Roll / Pitch / Yaw", `${metrics.roll.available ? "พร้อม" : "N/A"} / ${metrics.pitch.available ? "พร้อม" : "N/A"} / ${metrics.yaw.available ? "พร้อม" : "N/A"}`]]} /><MiniSeries title="Gyro activity" metric={metrics.gyro} /><MiniSeries title="Throttle activity" metric={metrics.throttle} /><MiniSeries title="Motor output activity" metric={metrics.motorOutput} /><div><div className="text-xs font-semibold text-white/75 mb-2">Key findings</div>{result.diagnostics.map((finding, index) => <div key={`${finding.status}-${index}`} className="mb-2 rounded-lg border border-white/10 bg-white/5 p-2.5"><div className={`text-[11px] font-semibold ${finding.status === "INDICATOR" ? "text-amber-300" : finding.status === "NOT AVAILABLE" ? "text-white/40" : "text-emerald-300"}`}>{finding.status}</div><div className="text-xs text-white/75 mt-1">WHY: {finding.why}</div><div className="text-[11px] text-white/45 mt-1">DATA USED: {finding.dataUsed}</div><div className="text-[11px] text-cyan-300/80 mt-1">WHAT TO CHECK NEXT: {finding.next}</div></div>)}</div><div><div className="text-xs font-semibold text-white/75 mb-1">Limitations</div>{result.assumptions.map((assumption) => <p key={assumption} className="text-[11px] text-white/45 leading-relaxed">• {assumption}</p>)}</div></div>;
+}
+
+function metricSummary(metric) { return metric?.available ? `RMS ${metric.rms.toFixed(1)} · range ${metric.range.toFixed(1)}` : "Not available in this log"; }
+function formatBytes(bytes) { return bytes < 1024 ? `${bytes} B` : bytes < 1024 * 1024 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / (1024 * 1024)).toFixed(2)} MB`; }
+function MiniSeries({ title, metric }) { if (!metric?.available) return <div className="rounded-lg bg-white/5 p-2.5 text-[11px] text-white/35">{title}: Not available in this log</div>; const values = metric.series; const min = Math.min(...values); const max = Math.max(...values); const span = max - min || 1; const points = values.map((value, index) => `${(index / Math.max(1, values.length - 1)) * 100},${100 - ((value - min) / span) * 86 - 7}`).join(" "); return <div className="rounded-lg bg-white/5 p-2.5"><div className="text-[11px] text-white/50 mb-1">{title}</div><svg viewBox="0 0 100 100" className="h-16 w-full" preserveAspectRatio="none" role="img" aria-label={`${title} chart`}><polyline points={points} fill="none" stroke="#22d3ee" strokeWidth="2" vectorEffect="non-scaling-stroke" /></svg></div>; }
 
 function Panel({ title, description, children }) { return <GlassCard className="p-4"><div className="text-sm font-semibold text-white">{title}</div><p className="text-[11px] text-white/45 leading-relaxed mt-1 mb-4">{description}</p>{children}</GlassCard>; }
 function CalculateButton({ onClick }) { return <button type="button" onClick={onClick} className="w-full mt-4 mb-4 py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 text-[#050b14] text-sm font-semibold">คำนวณ</button>; }

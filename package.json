@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext js,jsx",
-    "test": "node --test src/lib/fpvEngine.test.js"
+    "test": "node --test src/lib/fpvEngine.test.js src/lib/blackbox/analyzer.test.js"
   },
   "dependencies": {
     "react": "^18.3.1",
