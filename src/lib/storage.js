@@ -46,6 +46,7 @@ export const storage = {
 // duplicating key strings across files.
 export const STORAGE_KEYS = {
   drones: "drones",
+  droneSchemaVersion: "drones-schema-version",
   profile: "pilot-profile",
   lang: "lang",
   favoriteTools: "favorite-tools",
