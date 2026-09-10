@@ -36,7 +36,7 @@ function AppShell({ drones, setDrones, profile, setProfile, lang, setLang, favor
   const navigate = useNavigate();
 
   return (
-    <div className="h-full w-full overflow-y-auto pb-24" style={{ WebkitOverflowScrolling: "touch" }}>
+    <div className="obix-screen-scroll" style={{ WebkitOverflowScrolling: "touch" }}>
       <Routes>
         <Route path="home" element={<Home drones={drones} profile={profile} go={(s) => navigate(`/app/${s}`)} openDrone={(d) => navigate(`/app/fleet/${d.id}`)} />} />
         <Route path="fleet" element={<Fleet drones={drones} setDrones={setDrones} openDrone={(d) => navigate(`/app/fleet/${d.id}`)} />} />
@@ -89,8 +89,8 @@ export default function ObixNexus() {
   }
 
   return (
-    <div className="w-full flex justify-center bg-[#050b14]" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
-      <div className="relative w-full max-w-[430px] h-[812px] max-h-[92vh] bg-[#050b14] overflow-hidden rounded-[2rem] border border-white/10 shadow-2xl">
+    <div className="min-h-[100dvh] w-full flex justify-center bg-[#030811] md:items-center" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
+      <div className="obix-app-frame">
         <Routes>
           {/* No login/register/forgot-password gate — Phase 2 is free and public.
               Splash goes straight into the app. */}
