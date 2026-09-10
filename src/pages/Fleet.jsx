@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Search, Plus, Trash2 } from "lucide-react";
 import { GlassCard, StatusPill, ScreenHeader, DroneVisual } from "../components/ui.jsx";
+import { createDroneInFleet, deleteDrone } from "../features/fleet/services/fleetService.js";
 
 export default function Fleet({ drones, setDrones, openDrone }) {
   const [filter, setFilter] = useState("all");
@@ -18,26 +19,11 @@ export default function Fleet({ drones, setDrones, openDrone }) {
   function addDrone() {
     if (!newName.trim()) return;
     const colors = ["cyan", "violet", "amber", "green"];
-    setDrones([
-      ...drones,
-      {
-        id: "d" + Date.now(),
-        name: newName.trim(),
-        type: "FPV Freestyle",
-        cell: "4S",
-        status: "OFFLINE",
-        battery: 100,
-        voltage: 16.8,
-        current: 0,
-        temp: 24,
-        rpm: 0,
-        flightTime: "0h 00m",
-        firmware: "Betaflight 4.5.1",
-        lastFlight: "ยังไม่เคยบิน",
-        color: colors[drones.length % colors.length],
-        history: [],
-      },
-    ]);
+    setDrones(createDroneInFleet(drones, {
+      name: newName.trim(),
+      color: colors[drones.length % colors.length],
+      lastFlight: "ยังไม่เคยบิน",
+    }));
     setNewName("");
     setShowAdd(false);
   }
@@ -83,7 +69,7 @@ export default function Fleet({ drones, setDrones, openDrone }) {
                   <button
                     type="button"
                     aria-label={`ลบ ${d.name}`}
-                    onClick={(e) => { e.stopPropagation(); setDrones(drones.filter((x) => x.id !== d.id)); }}
+                    onClick={(e) => { e.stopPropagation(); setDrones(deleteDrone(drones, d.id)); }}
                     className="text-white/20 active:text-red-400"
                   >
                     <Trash2 size={13} />

@@ -15,13 +15,13 @@ const PANEL_COMPONENTS = {
   vtx: lazy(() => import("../features/tools/panels/VtxPanel.jsx")),
 };
 
-export default function Tools({ favorites, toggleFavorite }) {
+export default function Tools({ favorites, toggleFavorite, drones = [], onAttachBlackbox }) {
   const [category, setCategory] = useState("All");
   const [query, setQuery] = useState("");
   const [openTool, setOpenTool] = useState(null);
   const list = filterTools({ category, query });
 
-  if (openTool) return <ToolDetail tool={openTool} onBack={() => setOpenTool(null)} favorites={favorites} toggleFavorite={toggleFavorite} />;
+  if (openTool) return <ToolDetail tool={openTool} onBack={() => setOpenTool(null)} favorites={favorites} toggleFavorite={toggleFavorite} drones={drones} onAttachBlackbox={onAttachBlackbox} />;
 
   return <ToolList tools={list} category={category} query={query} setCategory={setCategory} setQuery={setQuery} onOpen={setOpenTool} favorites={favorites} toggleFavorite={toggleFavorite} />;
 }
@@ -57,20 +57,22 @@ function ToolListItem({ tool, onOpen, favorites, toggleFavorite }) {
   </GlassCard>;
 }
 
-function ToolDetail({ tool, onBack, favorites, toggleFavorite }) {
+function ToolDetail({ tool, onBack, favorites, toggleFavorite, drones, onAttachBlackbox }) {
   const colors = colorMap[tool.color];
   const Icon = TOOL_ICONS[tool.icon];
   const favorite = favorites.includes(tool.id);
   return <div className="pb-4">
     <ScreenHeader title={tool.label} onBack={onBack} right={<button type="button" aria-label={`${favorite ? "ยกเลิกดาว" : "เพิ่มดาว"} ${tool.label}`} onClick={() => toggleFavorite(tool.id)} className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center"><Star size={15} fill={favorite ? "#fbbf24" : "none"} className={favorite ? "text-amber-400" : "text-white/40"} /></button>} />
-    <div className="px-5"><GlassCard className="p-4 mb-4"><div className="flex items-center gap-3 mb-2"><div className={`w-11 h-11 rounded-xl ${colors.soft} flex items-center justify-center`}><Icon size={20} className={colors.text} /></div><div><div className="text-sm font-semibold text-white">{tool.label}</div><span className={`text-[9px] px-2 py-0.5 rounded-full border ${toolStatusColor[tool.status] || ""}`}>{tool.status}</span></div></div><p className="text-[12px] text-white/50 leading-relaxed">{tool.description}</p></GlassCard><ToolPanel panel={getToolDefinition(tool.id)?.panel} /></div>
+    <div className="px-5"><GlassCard className="p-4 mb-4"><div className="flex items-center gap-3 mb-2"><div className={`w-11 h-11 rounded-xl ${colors.soft} flex items-center justify-center`}><Icon size={20} className={colors.text} /></div><div><div className="text-sm font-semibold text-white">{tool.label}</div><span className={`text-[9px] px-2 py-0.5 rounded-full border ${toolStatusColor[tool.status] || ""}`}>{tool.status}</span></div></div><p className="text-[12px] text-white/50 leading-relaxed">{tool.description}</p></GlassCard><ToolPanel panel={getToolDefinition(tool.id)?.panel} drones={drones} onAttachBlackbox={onAttachBlackbox} /></div>
   </div>;
 }
 
-function ToolPanel({ panel }) {
+function ToolPanel({ panel, drones, onAttachBlackbox }) {
   const PanelComponent = PANEL_COMPONENTS[panel];
   if (!PanelComponent) return <PlaceholderPanel />;
-  return <Suspense fallback={<ToolLoadingFallback label="กำลังโหลดเครื่องมือ..." />}><PanelComponent /></Suspense>;
+  // Only BlackboxPanel reads drones/onAttachBlackbox today; every other
+  // panel simply ignores the extra props (Task 6's integration boundary).
+  return <Suspense fallback={<ToolLoadingFallback label="กำลังโหลดเครื่องมือ..." />}><PanelComponent drones={drones} onAttachBlackbox={onAttachBlackbox} /></Suspense>;
 }
 
 function PlaceholderPanel() {

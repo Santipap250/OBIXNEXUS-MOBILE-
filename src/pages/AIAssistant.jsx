@@ -1,28 +1,26 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Bot, Check, ChevronRight } from "lucide-react";
 import { GlassCard, ScreenHeader } from "../components/ui.jsx";
+import { respond, WELCOME_MESSAGE, SUGGESTIONS } from "../features/ai/services/demoAssistant.js";
 
 export default function AIAssistant() {
-  const [messages, setMessages] = useState([
-    { role: "ai", text: "สวัสดีครับ ผมคือ NEXUS AI (โหมดทดลองในเครื่อง ไม่เชื่อมต่อบัญชีหรือ AI ภายนอก) พร้อมช่วยวิเคราะห์และแนะนำการตั้งค่าโดรนของคุณ ลองถามอะไรก็ได้เลยครับ" },
-  ]);
+  const [messages, setMessages] = useState([{ role: "ai", text: WELCOME_MESSAGE }]);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
   const endRef = useRef(null);
-  const suggestions = ["ช่วยวิเคราะห์ PID ของ Apex 5", "แนะนำ Filter สำหรับ Freestyle", "อธิบาย RPM Filter คืออะไร"];
+  const suggestions = SUGGESTIONS;
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, thinking]);
 
-  function send(text) {
+  async function send(text) {
     const q = (text ?? input).trim();
     if (!q) return;
     setMessages((m) => [...m, { role: "user", text: q }]);
     setInput("");
     setThinking(true);
-    setTimeout(() => {
-      setThinking(false);
-      setMessages((m) => [...m, { role: "ai", pid: { p: 48, i: 58, d: 32 }, text: "คำแนะนำจาก NEXUS AI (โหมดทดลอง) จากข้อมูลตัวอย่างและโหมด Freestyle แนะนำค่า PID เบื้องต้นดังนี้" }]);
-    }, 1200);
+    const reply = await respond(q);
+    setThinking(false);
+    setMessages((m) => [...m, { role: "ai", ...reply }]);
   }
 
   return (
@@ -50,7 +48,7 @@ export default function AIAssistant() {
                         ))}
                       </div>
                       <div className="mt-3 space-y-1">
-                        {["เหมาะกับ 4S / 6S", "เสถียรสำหรับ Freestyle", "แนะนำตรวจสอบ motor noise", "ปรับ filter ตาม Blackbox"].map((s) => (
+                        {(m.notes || []).map((s) => (
                           <div key={s} className="flex items-center gap-1.5 text-[12px] text-white/60"><Check size={12} className="text-emerald-400" /> {s}</div>
                         ))}
                       </div>

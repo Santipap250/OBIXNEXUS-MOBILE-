@@ -1,11 +1,29 @@
 import React, { useState } from "react";
-import { Battery, Zap, Gauge, Thermometer, Activity, Clock, Radar, Layers, ChevronRight } from "lucide-react";
+import { Battery, Zap, Gauge, Thermometer, Activity, Clock, Radar, Layers, ChevronRight, CheckCircle2 } from "lucide-react";
 import { GlassCard, StatusPill, ScreenHeader, MiniChart, Timeline, DroneVisual } from "../components/ui.jsx";
 import { colorMap } from "../data/seed.js";
+import { toLegacyTimelineEvents } from "../features/fleet/model/historyEvent.js";
+import { DATA_SOURCE } from "../features/fleet/model/drone.js";
+
+const CONFIG_FIELDS = [
+  ["pid", "PID"],
+  ["filters", "Filters"],
+  ["rates", "Rates"],
+  ["rpmFilter", "RPM Filter"],
+  ["motorOutput", "Motor Output"],
+  ["firmware", "Firmware"],
+];
+
+const CONFIG_STATE_LABEL = {
+  NOT_CONFIGURED: "Not configured",
+  DEMO: "Demo data",
+  CONFIGURED: "Configured",
+};
 
 export default function DroneDetail({ drone, onBack, goTwin }) {
   const [tab, setTab] = useState("overview");
   const c = colorMap[drone.color];
+  const isDemo = drone.dataSource === DATA_SOURCE.SEEDED_DEMO;
   return (
     <div className="pb-4">
       <ScreenHeader title={drone.name} onBack={onBack} />
@@ -47,7 +65,12 @@ export default function DroneDetail({ drone, onBack, goTwin }) {
             <div className="text-[15px] font-semibold text-white/90 mb-3">กราฟการบิน (ล่าสุด)</div>
             <GlassCard className="p-4 mb-4">
               <MiniChart color={drone.color} />
-              <div className="text-[10px] text-white/30 mt-2 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live</div>
+              {/* Never imply live hardware connectivity — this chart is always
+                  drawn from local/sample data, not a real telemetry stream. */}
+              <div className="text-[10px] text-white/30 mt-2 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-white/25" />
+                {isDemo ? "SAMPLE DATA" : "OFFLINE — local data"}
+              </div>
             </GlassCard>
 
             <div className="grid grid-cols-2 gap-2.5">
@@ -63,23 +86,52 @@ export default function DroneDetail({ drone, onBack, goTwin }) {
 
         {tab === "config" && (
           <div className="space-y-2.5">
-            {["PID", "Filters", "Rates", "RPM Filter", "Motor Output", "Firmware"].map((k) => (
-              <GlassCard key={k} className="p-3.5 flex items-center justify-between">
-                <span className="text-sm text-white/80">{k}</span>
-                <ChevronRight size={15} className="text-white/25" />
-              </GlassCard>
-            ))}
+            {CONFIG_FIELDS.map(([key, label]) => {
+              const field = drone.config?.[key];
+              const state = field?.state || "NOT_CONFIGURED";
+              return (
+                <GlassCard key={key} className="p-3.5 flex items-center justify-between">
+                  <div>
+                    <div className="text-sm text-white/80">{label}</div>
+                    <div className={`text-[10px] mt-0.5 ${state === "CONFIGURED" ? "text-emerald-400" : state === "DEMO" ? "text-amber-400" : "text-white/30"}`}>
+                      {field?.value != null ? String(field.value) : CONFIG_STATE_LABEL[state]}
+                    </div>
+                  </div>
+                  <ChevronRight size={15} className="text-white/25" />
+                </GlassCard>
+              );
+            })}
           </div>
         )}
 
         {tab === "blackbox" && (
-          <div className="text-center py-16 text-white/30 text-sm">
-            <Radar size={30} className="mx-auto mb-3 opacity-40" />
-            ยังไม่มีข้อมูล Blackbox ล่าสุด<br />บันทึกไฟล์ล็อกเพื่อเริ่มวิเคราะห์
-          </div>
+          drone.blackbox?.lastAnalysis ? (
+            <GlassCard className="p-3.5">
+              <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold">
+                <CheckCircle2 size={14} /> {drone.blackbox.lastAnalysis.ok ? "วิเคราะห์สำเร็จล่าสุด" : "การวิเคราะห์ล่าสุดล้มเหลว"}
+              </div>
+              {drone.blackbox.lastLogFileName && (
+                <div className="text-[12px] text-white/70 mt-2 truncate">{drone.blackbox.lastLogFileName}</div>
+              )}
+              {drone.blackbox.lastAnalysis.ok && (
+                <div className="text-[11px] text-white/45 mt-1">
+                  {drone.blackbox.lastAnalysis.health === "NEEDS_REVIEW" ? "🟡 ควรตรวจสอบเพิ่มเติม" : "🟢 ไม่พบ indicator รุนแรง"}
+                  {drone.blackbox.lastAnalysis.sampleCount != null && ` · ${drone.blackbox.lastAnalysis.sampleCount.toLocaleString()} samples`}
+                </div>
+              )}
+              <div className="text-[10px] text-white/30 mt-2">
+                {drone.blackbox.lastAnalyzedAt ? new Date(drone.blackbox.lastAnalyzedAt).toLocaleString() : ""}
+              </div>
+            </GlassCard>
+          ) : (
+            <div className="text-center py-16 text-white/30 text-sm">
+              <Radar size={30} className="mx-auto mb-3 opacity-40" />
+              ยังไม่มีข้อมูล Blackbox ล่าสุด<br />วิเคราะห์ไฟล์ล็อกในเครื่องมือ Blackbox แล้วเชื่อมกับโดรนนี้
+            </div>
+          )
         )}
 
-        {tab === "history" && <Timeline events={drone.history} />}
+        {tab === "history" && <Timeline events={toLegacyTimelineEvents(drone.history)} />}
       </div>
     </div>
   );

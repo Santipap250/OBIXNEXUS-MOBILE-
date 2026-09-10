@@ -39,8 +39,8 @@ export default function Home({ drones, profile, go, openDrone }) {
               </div>
               <div>
                 <div className="text-[12px] font-semibold text-white">NEXUS STATUS</div>
-                <div className="text-[10px] text-emerald-400 flex items-center gap-1 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> SYSTEM ONLINE
+                <div className="text-[10px] text-white/40 flex items-center gap-1 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/30" /> LOCAL-FIRST · NO LIVE LINK
                 </div>
               </div>
             </div>
