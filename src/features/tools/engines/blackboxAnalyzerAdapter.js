@@ -1,39 +1,88 @@
 import { analyzeBlackboxText } from "../../../lib/blackbox/analyzer.js";
 
-let workerPromise;
+let worker = null;
+let workerPromise = null;
+let workerUnavailable = false;
+let requestId = 0;
+const pending = new Map();
 
-function getWorker() {
-  if (typeof Worker === "undefined") return null;
+function settleWithFallback(request) {
+  try {
+    request.resolve(analyzeBlackboxText(request.fileName, request.text));
+  } catch (error) {
+    request.reject(error);
+  }
+}
+
+function handleWorkerMessage(event) {
+  const { requestId: responseId, ...result } = event.data || {};
+  const request = pending.get(responseId);
+  if (!request) return;
+  pending.delete(responseId);
+  request.resolve(result);
+}
+
+function handleWorkerFailure() {
+  workerUnavailable = true;
+  worker = null;
+  workerPromise = null;
+  for (const request of pending.values()) settleWithFallback(request);
+  pending.clear();
+}
+
+function createWorker() {
+  if (workerUnavailable || typeof Worker === "undefined") return Promise.resolve(null);
   if (!workerPromise) {
-    workerPromise = Promise.resolve(new Worker(new URL("./blackboxAnalyzer.worker.js", import.meta.url), { type: "module" }));
+    // Promise.resolve(new Worker(...)) does not protect synchronous construction.
+    workerPromise = Promise.resolve()
+      .then(() => new Worker(new URL("./blackboxAnalyzer.worker.js", import.meta.url), { type: "module" }))
+      .then((instance) => {
+        worker = instance;
+        worker.addEventListener("message", handleWorkerMessage);
+        worker.addEventListener("error", handleWorkerFailure);
+        return instance;
+      })
+      .catch(() => {
+        workerUnavailable = true;
+        workerPromise = null;
+        return null;
+      });
   }
   return workerPromise;
 }
 
 /**
- * UI-facing adapter. The analyzer engine is isolated behind this boundary so
- * large logs can move to a worker without changing the Blackbox panel API.
+ * UI-facing adapter. A single shared Worker is correlated by requestId so
+ * concurrent analysis requests cannot resolve one another's promises.
  */
 export async function analyzeBlackbox(fileName, text) {
-  const worker = await getWorker();
-  if (!worker) return analyzeBlackboxText(fileName, text);
+  const instance = await createWorker();
+  if (!instance) return analyzeBlackboxText(fileName, text);
 
+  const id = ++requestId;
   return new Promise((resolve, reject) => {
-    const handleMessage = (event) => {
-      worker.removeEventListener("message", handleMessage);
-      worker.removeEventListener("error", handleError);
-      resolve(event.data);
-    };
-    const handleError = (error) => {
-      worker.removeEventListener("message", handleMessage);
-      worker.removeEventListener("error", handleError);
-      // Keep the local-first experience resilient if worker construction or
-      // execution is unavailable in an older browser/webview.
-      try { resolve(analyzeBlackboxText(fileName, text)); } catch (fallbackError) { reject(fallbackError); }
+    const request = { fileName, text, resolve, reject };
+    pending.set(id, request);
+    try {
+      instance.postMessage({ requestId: id, fileName, text });
+    } catch (error) {
+      pending.delete(id);
+      settleWithFallback(request);
       void error;
-    };
-    worker.addEventListener("message", handleMessage, { once: true });
-    worker.addEventListener("error", handleError, { once: true });
-    worker.postMessage({ fileName, text });
+    }
   });
+}
+
+// Test-only reset hook; it is intentionally not part of the UI-facing API.
+export function __resetBlackboxWorkerForTests() {
+  worker?.terminate?.();
+  worker = null;
+  workerPromise = null;
+  workerUnavailable = false;
+  requestId = 0;
+  pending.clear();
+}
+
+export function __pendingBlackboxRequestCountForTests() {
+  return pending.size;
 }
