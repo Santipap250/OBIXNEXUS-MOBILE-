@@ -71,14 +71,14 @@ export const defaultDrones = [
 ];
 
 export const seedTools = [
-  { id: "configdoctor", name: "ConfigDoctor", desc: "วิเคราะห์และตรวจสอบการตั้งค่าของโดรน", cat: "Config", status: "READY", icon: Shield, color: "cyan" },
-  { id: "obixcore", name: "OBIXCORE", desc: "ปรับแต่งและจูนพารามิเตอร์แบบละเอียด", cat: "Tuning", status: "READY", icon: Cpu, color: "violet" },
+  { id: "configdoctor", name: "ConfigDoctor", desc: "วิเคราะห์และตรวจสอบการตั้งค่าของโดรน (แนวคิด/พรีวิว)", cat: "Config", status: "PREVIEW", icon: Shield, color: "cyan" },
+  { id: "obixcore", name: "OBIXCORE", desc: "ปรับแต่งและจูนพารามิเตอร์แบบละเอียด (กำลังพัฒนา)", cat: "Tuning", status: "COMING SOON", icon: Cpu, color: "violet" },
   { id: "configfpv", name: "ConfigFPV", desc: "คลังข้อมูลการตั้งค่าจากชุมชนและโปรไฟล์ด้านล่าง", cat: "Config", status: "PREVIEW", icon: Activity, color: "cyan" },
   { id: "configlab", name: "ConfigLab", desc: "เครื่องมือทดลองและพัฒนาการตั้งค่าแบบล่าสุด", cat: "Data", status: "COMING SOON", icon: Layers, color: "amber" },
   { id: "pidadvisor", name: "PID Advisor", desc: "แนะนำค่า PID ที่เหมาะกับสไตล์การบิน", cat: "Tuning", status: "READY", icon: Gauge, color: "violet" },
-  { id: "blackbox", name: "Blackbox Analyzer", desc: "วิเคราะห์ไฟล์ Blackbox หลังการบิน", cat: "Analysis", status: "READY", icon: Radar, color: "cyan" },
+  { id: "blackbox", name: "Blackbox Analyzer", desc: "วิเคราะห์ CSV/text log ภายในเครื่อง (ยังไม่รองรับ binary .bbl)", cat: "Analysis", status: "BETA", icon: Radar, color: "cyan" },
   { id: "battery", name: "Battery Analyzer", desc: "ติดตามสุขภาพแบตเตอรี่ตามรอบการบิน", cat: "Data", status: "BETA", icon: Battery, color: "green" },
-  { id: "vtx", name: "VTX Tools", desc: "จัดการช่องสัญญาณและกำลังส่ง", cat: "Config", status: "COMING SOON", icon: Wifi, color: "amber" },
+  { id: "vtx", name: "VTX Tools", desc: "ตัวช่วยเลือกระดับกำลังส่งตามระยะและสภาพแวดล้อม", cat: "Config", status: "BETA", icon: Wifi, color: "amber" },
   { id: "motorprop", name: "Motor / Prop Match", desc: "ตรวจความเข้ากันได้ของมอเตอร์ ใบพัด และแบตเตอรี่", cat: "Config", status: "READY", icon: Gauge, color: "cyan" },
   { id: "thrustplanner", name: "Weight / Thrust Planner", desc: "ตั้งเป้าแรงขับจากน้ำหนักและสไตล์การบิน", cat: "Analysis", status: "READY", icon: Activity, color: "green" },
 ];

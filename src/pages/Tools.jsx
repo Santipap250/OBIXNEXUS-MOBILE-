@@ -96,12 +96,16 @@ function ToolDetail({ tool, onBack, favorites, toggleFavorite }) {
 
 function ToolPanel({ toolId }) {
   if (toolId === "battery") return <BatteryPanel />;
-  if (toolId === "obixcore" || toolId === "pidadvisor") return <PidPanel />;
+  if (toolId === "pidadvisor") return <PidPanel />;
   if (toolId === "vtx") return <VtxPanel />;
   if (toolId === "blackbox") return <BlackboxPanel />;
-  if (toolId === "configfpv" || toolId === "motorprop") return <MotorPanel />;
-  if (toolId === "configdoctor" || toolId === "thrustplanner") return <ThrustPanel />;
-  return <div className="text-center py-16 text-white/30 text-sm"><Calculator size={28} className="mx-auto mb-3 opacity-40" />เครื่องมือนี้กำลังพัฒนา โดยผลลัพธ์ที่เพิ่มในอนาคตจะอ้างอิงข้อมูลที่ผู้ใช้ป้อนและระบุสมมติฐานอย่างชัดเจน</div>;
+  if (toolId === "motorprop") return <MotorPanel />;
+  if (toolId === "thrustplanner") return <ThrustPanel />;
+  return <PlaceholderPanel />;
+}
+
+function PlaceholderPanel() {
+  return <div className="text-center py-16 text-white/30 text-sm"><Calculator size={28} className="mx-auto mb-3 opacity-40" /><div className="font-semibold text-white/55">เครื่องมือนี้ยังอยู่ในสถานะพรีวิว</div><div className="mt-2 leading-relaxed">ยังไม่มี calculation engine เฉพาะสำหรับเครื่องมือนี้ จึงไม่แสดงผลจาก calculator อื่นแทน</div></div>;
 }
 
 function BatteryPanel() {
@@ -156,7 +160,7 @@ function BlackboxPanel() {
     }
   }
 
-  return <Panel title="Local Blackbox Analyzer" description="เลือกไฟล์จากอุปกรณ์เพื่อวิเคราะห์ภายในเครื่องเท่านั้น ไฟล์จะไม่ถูกอัปโหลด"><label className="block rounded-xl border border-dashed border-cyan-400/35 bg-cyan-400/5 p-4 text-center cursor-pointer"><input type="file" accept=".csv,.bbl,.txt,text/csv,text/plain" onChange={handleFile} className="sr-only" /><div className="text-sm font-semibold text-cyan-300">เลือกไฟล์ Blackbox</div><div className="text-[11px] text-white/40 mt-1">รองรับ CSV และ text export; binary .bbl จะแจ้งว่าไม่รองรับ</div></label>{fileInfo && <div className="mt-3 rounded-xl bg-white/5 p-3 text-xs"><div className="font-semibold text-white truncate">{fileInfo.name}</div><div className="text-white/45 mt-1">{formatBytes(fileInfo.size)} · {fileInfo.status}</div></div>}{parsing && <div className="mt-3 text-xs text-cyan-300">กำลัง parse ข้อมูล...</div>}{result && (result.ok ? <BlackboxReport result={result} /> : <div className="mt-3 rounded-xl border border-red-400/25 bg-red-400/10 p-3 text-xs text-red-200">{result.error}</div>)}</Panel>;
+  return <Panel title="Local Blackbox Analyzer (BETA)" description="MVP นี้วิเคราะห์ได้เฉพาะ CSV และ text-based logs ภายในเครื่องเท่านั้น ไฟล์จะไม่ถูกอัปโหลด และยังไม่รองรับ Betaflight binary Blackbox .bbl"><div className="mb-3 rounded-lg border border-amber-400/25 bg-amber-400/10 p-2.5 text-[11px] leading-relaxed text-amber-200">รองรับ: CSV / text export<br />ยังไม่รองรับ: Betaflight binary Blackbox .bbl</div><label className="block rounded-xl border border-dashed border-cyan-400/35 bg-cyan-400/5 p-4 text-center cursor-pointer"><input type="file" accept=".csv,.bbl,.txt,text/csv,text/plain" onChange={handleFile} className="sr-only" /><div className="text-sm font-semibold text-cyan-300">เลือกไฟล์ CSV หรือ text log</div><div className="text-[11px] text-white/40 mt-1">ไฟล์ binary .bbl จะถูกปฏิเสธอย่างชัดเจน</div></label>{fileInfo && <div className="mt-3 rounded-xl bg-white/5 p-3 text-xs"><div className="font-semibold text-white truncate">{fileInfo.name}</div><div className="text-white/45 mt-1">{formatBytes(fileInfo.size)} · {fileInfo.status}</div></div>}{parsing && <div className="mt-3 text-xs text-cyan-300">กำลัง parse ข้อมูล...</div>}{result && (result.ok ? <BlackboxReport result={result} /> : <div className="mt-3 rounded-xl border border-red-400/25 bg-red-400/10 p-3 text-xs text-red-200">{result.error}</div>)}</Panel>;
 }
 
 function BlackboxReport({ result }) {
