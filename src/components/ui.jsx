@@ -15,7 +15,7 @@ export function GlassCard({ children, className = "", onClick, glow, "aria-label
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
       aria-label={ariaLabel}
-      className={`rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl ${glow || ""} ${onClick ? "active:scale-[0.98] transition-transform cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70" : ""} ${className}`}
+      className={`obix-surface rounded-2xl ${glow || ""} ${onClick ? "obix-surface-pressable cursor-pointer" : ""} ${className}`}
     >
       {children}
     </div>
@@ -64,11 +64,11 @@ export function DroneVisual({ drone, className = "" }) {
 
 export function TopBar({ title = "OBIX NEXUS", onMenu, onBell, sub }) {
   return (
-    <div className="flex items-center justify-between px-5 pt-5 pb-2">
+    <div className="flex items-center justify-between px-5 pt-5 pb-3">
       <div className="flex items-center gap-2">
         <ObixMark />
         <div>
-          <div className="text-[13px] font-bold tracking-wide text-white leading-none">{title}</div>
+          <div className="text-[13px] font-bold tracking-[.04em] text-white leading-none">{title}</div>
           {sub && <div className="text-[9px] tracking-[0.2em] text-white/30 mt-0.5">{sub}</div>}
         </div>
       </div>
@@ -142,7 +142,7 @@ export function BottomNav({ screen, go }) {
     { k: "community", icon: Users, l: "ชุมชน" },
   ];
   return (
-    <div className="absolute bottom-0 left-0 right-0 bg-[#0a1220]/90 backdrop-blur-xl border-t border-white/10 flex items-center justify-around px-2 pt-2" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 8px) + 8px)" }}>
+    <div className="obix-bottom-nav absolute bottom-0 left-0 right-0 bg-[#07111d]/92 backdrop-blur-xl border-t border-white/10 flex items-center justify-around px-2 pt-2" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 8px) + 8px)" }}>
       {items.map((it) => {
         const active = screen === it.k;
         return (
