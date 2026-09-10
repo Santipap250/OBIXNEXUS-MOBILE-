@@ -84,7 +84,7 @@ export const seedTools = [
 ];
 
 export const seedPosts = [
-  { id: 1, user: "SanTiFPV", tag: "Top Creator", title: "Preset สำหรับ Apex 5 (4S) - Freestyle", desc: "ลองใช้กันดูครับ ปรับ filter ใหม่หมด บินนิ่งขึ้นเยอะ", likes: 128, comments: 24, views: 1200 },
+  { id: 1, user: "ทุกคน", tag: "Top Creator", title: "Preset สำหรับ Apex 5 (4S) - Freestyle", desc: "ลองใช้กันดูครับ ปรับ filter ใหม่หมด บินนิ่งขึ้นเยอะ", likes: 128, comments: 24, views: 1200 },
   { id: 2, user: "NatFPV", tag: null, title: "Blackbox log หลัง tune Ghost Cine", desc: "แชร์ log ให้ดูการตอบสนองหลังปรับ D-term", likes: 54, comments: 9, views: 410 },
   { id: 3, user: "PawFreestyle", tag: "Verified", title: "Build guide: Toothpick 3S ตัวเบา", desc: "สเปกที่ใช้และเหตุผลการเลือกอุปกรณ์แต่ละชิ้น", likes: 201, comments: 41, views: 3400 },
 ];
