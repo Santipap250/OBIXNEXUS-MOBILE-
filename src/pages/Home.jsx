@@ -1,7 +1,8 @@
 import React from "react";
 import { Zap, Battery, Bot, Bell, ChevronRight, Radar } from "lucide-react";
 import { GlassCard, StatusPill, SectionLabel, ObixMark, DroneVisual } from "../components/ui.jsx";
-import { seedTools, colorMap } from "../data/seed.js";
+import { colorMap } from "../data/seed.js";
+import { TOOL_REGISTRY } from "../features/tools/registry/index.js";
 
 export default function Home({ drones, profile, go, openDrone }) {
   return (
@@ -48,7 +49,7 @@ export default function Home({ drones, profile, go, openDrone }) {
           <div className="grid grid-cols-3 gap-2">
             {[
               { n: 4, l: "ENGINES" },
-              { n: seedTools.length, l: "TOOLS" },
+              { n: TOOL_REGISTRY.length, l: "TOOLS" },
               { n: drones.length, l: "DRONES" },
             ].map((s) => (
               <div key={s.l} className="rounded-xl border border-white/5 bg-white/[.045] py-2.5 text-center">
