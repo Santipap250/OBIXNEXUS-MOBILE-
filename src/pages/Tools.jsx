@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from "react";
 import { Search, Star, Calculator, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { GlassCard, ScreenHeader } from "../components/ui.jsx";
-import { seedTools, colorMap, toolStatusColor } from "../data/seed.js";
+import { colorMap, toolStatusColor } from "../data/seed.js";
+import { TOOL_CATEGORIES, TOOL_REGISTRY, getToolDefinition } from "../features/tools/registry/toolRegistry.js";
 import {
   FLIGHT_PROFILES,
   assessMotorProp,
@@ -11,7 +12,7 @@ import {
   recommendPid,
   recommendVtx,
 } from "../lib/fpvEngine.js";
-import { analyzeBlackboxText } from "../lib/blackbox/analyzer.js";
+import { analyzeBlackbox } from "../features/tools/engines/blackboxAnalyzerAdapter.js";
 
 const profileOptions = Object.keys(FLIGHT_PROFILES);
 
@@ -19,8 +20,7 @@ export default function Tools({ favorites, toggleFavorite }) {
   const [cat, setCat] = useState("All");
   const [query, setQuery] = useState("");
   const [openTool, setOpenTool] = useState(null);
-  const cats = ["All", "Config", "Analysis", "Tuning", "Data"];
-  const list = seedTools.filter((t) => (cat === "All" || t.cat === cat) && t.name.toLowerCase().includes(query.toLowerCase()));
+  const list = TOOL_REGISTRY.filter((t) => (cat === "All" || t.cat === cat) && t.name.toLowerCase().includes(query.toLowerCase()));
 
   if (openTool) return <ToolDetail tool={openTool} onBack={() => setOpenTool(null)} favorites={favorites} toggleFavorite={toggleFavorite} />;
 
@@ -33,7 +33,7 @@ export default function Tools({ favorites, toggleFavorite }) {
           <input aria-label="ค้นหาเครื่องมือ" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ค้นหาเครื่องมือ..." className="bg-transparent outline-none text-sm text-white w-full placeholder:text-white/25" />
         </div>
         <div className="flex gap-2 mb-4 overflow-x-auto -mx-5 px-5">
-          {cats.map((c) => <button type="button" key={c} onClick={() => setCat(c)} className={`text-xs px-3.5 py-1.5 rounded-full whitespace-nowrap border ${cat === c ? "bg-cyan-400 text-[#050b14] border-cyan-400 font-semibold" : "border-white/10 text-white/50"}`}>{c}</button>)}
+          {TOOL_CATEGORIES.map((c) => <button type="button" key={c} onClick={() => setCat(c)} className={`text-xs px-3.5 py-1.5 rounded-full whitespace-nowrap border ${cat === c ? "bg-cyan-400 text-[#050b14] border-cyan-400 font-semibold" : "border-white/10 text-white/50"}`}>{c}</button>)}
         </div>
         <div className="space-y-2.5">
           {list.map((t) => {
@@ -95,12 +95,13 @@ function ToolDetail({ tool, onBack, favorites, toggleFavorite }) {
 }
 
 function ToolPanel({ toolId }) {
-  if (toolId === "battery") return <BatteryPanel />;
-  if (toolId === "pidadvisor") return <PidPanel />;
-  if (toolId === "vtx") return <VtxPanel />;
-  if (toolId === "blackbox") return <BlackboxPanel />;
-  if (toolId === "motorprop") return <MotorPanel />;
-  if (toolId === "thrustplanner") return <ThrustPanel />;
+  const panel = getToolDefinition(toolId)?.id;
+  if (panel === "battery") return <BatteryPanel />;
+  if (panel === "pidadvisor") return <PidPanel />;
+  if (panel === "vtx") return <VtxPanel />;
+  if (panel === "blackbox") return <BlackboxPanel />;
+  if (panel === "motorprop") return <MotorPanel />;
+  if (panel === "thrustplanner") return <ThrustPanel />;
   return <PlaceholderPanel />;
 }
 
@@ -149,7 +150,7 @@ function BlackboxPanel() {
     setFileInfo({ name: file.name, size: file.size, status: "กำลังอ่านไฟล์ภายในเครื่อง..." });
     try {
       const text = await file.slice(0, 5 * 1024 * 1024).text();
-      const analysis = analyzeBlackboxText(file.name, text);
+      const analysis = await analyzeBlackbox(file.name, text);
       setResult(analysis);
       setFileInfo({ name: file.name, size: file.size, status: analysis.ok ? "วิเคราะห์สำเร็จ" : "วิเคราะห์ไม่สำเร็จ" });
     } catch (error) {
