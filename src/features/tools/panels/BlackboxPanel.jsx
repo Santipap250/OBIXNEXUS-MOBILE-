@@ -1,17 +1,20 @@
 import React, { useState } from "react";
+import { Link2, Check } from "lucide-react";
 import { analyzeBlackbox } from "../engines/blackboxAnalyzerAdapter.js";
 import { MetricGrid, Panel } from "../components/ToolPrimitives.jsx";
 
-export default function BlackboxPanel() {
+export default function BlackboxPanel({ drones = [], onAttachBlackbox }) {
   const [fileInfo, setFileInfo] = useState(null);
   const [result, setResult] = useState(null);
   const [parsing, setParsing] = useState(false);
+  const [attachedTo, setAttachedTo] = useState(null);
 
   async function handleFile(event) {
     const file = event.target.files?.[0];
     if (!file) return;
     setParsing(true);
     setResult(null);
+    setAttachedTo(null);
     setFileInfo({ name: file.name, size: file.size, status: "กำลังอ่านไฟล์ภายในเครื่อง..." });
     try {
       const text = await file.slice(0, 5 * 1024 * 1024).text();
@@ -27,7 +30,36 @@ export default function BlackboxPanel() {
     }
   }
 
-  return <Panel title="Local Blackbox Analyzer (BETA)" description="MVP นี้วิเคราะห์ได้เฉพาะ CSV และ text-based logs ภายในเครื่องเท่านั้น ไฟล์จะไม่ถูกอัปโหลด และยังไม่รองรับ Betaflight binary Blackbox .bbl"><div className="mb-3 rounded-lg border border-amber-400/25 bg-amber-400/10 p-2.5 text-[11px] leading-relaxed text-amber-200">รองรับ: CSV / text export<br />ยังไม่รองรับ: Betaflight binary Blackbox .bbl</div><label className="block rounded-xl border border-dashed border-cyan-400/35 bg-cyan-400/5 p-4 text-center cursor-pointer"><input type="file" accept=".csv,.bbl,.txt,text/csv,text/plain" onChange={handleFile} className="sr-only" /><div className="text-sm font-semibold text-cyan-300">เลือกไฟล์ CSV หรือ text log</div><div className="text-[11px] text-white/40 mt-1">ไฟล์ binary .bbl จะถูกปฏิเสธอย่างชัดเจน</div></label>{fileInfo && <div className="mt-3 rounded-xl bg-white/5 p-3 text-xs"><div className="font-semibold text-white truncate">{fileInfo.name}</div><div className="text-white/45 mt-1">{formatBytes(fileInfo.size)} · {fileInfo.status}</div></div>}{parsing && <div className="mt-3 text-xs text-cyan-300">กำลัง parse ข้อมูล...</div>}{result && (result.ok ? <BlackboxReport result={result} /> : <div className="mt-3 rounded-xl border border-red-400/25 bg-red-400/10 p-3 text-xs text-red-200">{result.error}</div>)}</Panel>;
+  function attachTo(droneId) {
+    if (!onAttachBlackbox || !result) return;
+    onAttachBlackbox(droneId, result, { fileName: fileInfo?.name });
+    setAttachedTo(droneId);
+  }
+
+  return <Panel title="Local Blackbox Analyzer (BETA)" description="MVP นี้วิเคราะห์ได้เฉพาะ CSV และ text-based logs ภายในเครื่องเท่านั้น ไฟล์จะไม่ถูกอัปโหลด และยังไม่รองรับ Betaflight binary Blackbox .bbl"><div className="mb-3 rounded-lg border border-amber-400/25 bg-amber-400/10 p-2.5 text-[11px] leading-relaxed text-amber-200">รองรับ: CSV / text export<br />ยังไม่รองรับ: Betaflight binary Blackbox .bbl</div><label className="block rounded-xl border border-dashed border-cyan-400/35 bg-cyan-400/5 p-4 text-center cursor-pointer"><input type="file" accept=".csv,.bbl,.txt,text/csv,text/plain" onChange={handleFile} className="sr-only" /><div className="text-sm font-semibold text-cyan-300">เลือกไฟล์ CSV หรือ text log</div><div className="text-[11px] text-white/40 mt-1">ไฟล์ binary .bbl จะถูกปฏิเสธอย่างชัดเจน</div></label>{fileInfo && <div className="mt-3 rounded-xl bg-white/5 p-3 text-xs"><div className="font-semibold text-white truncate">{fileInfo.name}</div><div className="text-white/45 mt-1">{formatBytes(fileInfo.size)} · {fileInfo.status}</div></div>}{parsing && <div className="mt-3 text-xs text-cyan-300">กำลัง parse ข้อมูล...</div>}{result && (result.ok ? <BlackboxReport result={result} /> : <div className="mt-3 rounded-xl border border-red-400/25 bg-red-400/10 p-3 text-xs text-red-200">{result.error}</div>)}{result && onAttachBlackbox && drones.length > 0 && <AttachToDrone drones={drones} attachedTo={attachedTo} onAttach={attachTo} />}</Panel>;
+}
+
+function AttachToDrone({ drones, attachedTo, onAttach }) {
+  return (
+    <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3">
+      <div className="text-xs font-semibold text-white/75 mb-2 flex items-center gap-1.5"><Link2 size={13} /> เชื่อมผลวิเคราะห์นี้กับโดรน</div>
+      <div className="flex flex-wrap gap-2">
+        {drones.map((d) => {
+          const attached = attachedTo === d.id;
+          return (
+            <button
+              key={d.id}
+              type="button"
+              onClick={() => onAttach(d.id)}
+              className={`text-[11px] px-3 py-1.5 rounded-full border flex items-center gap-1 ${attached ? "bg-emerald-400 text-[#050b14] border-emerald-400 font-semibold" : "border-white/10 text-white/60"}`}
+            >
+              {attached && <Check size={11} />} {d.name}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function BlackboxReport({ result }) {
