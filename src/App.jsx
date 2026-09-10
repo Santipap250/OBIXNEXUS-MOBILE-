@@ -5,6 +5,9 @@ import { BottomNav } from "./components/ui.jsx";
 import { usePersistentState } from "./lib/usePersistentState.js";
 import { STORAGE_KEYS, resetAllLocalData } from "./lib/storage.js";
 import { defaultDrones, defaultProfile } from "./data/seed.js";
+import { useDroneFleet } from "./features/fleet/storage/useDroneFleet.js";
+import { loadDrones } from "./features/fleet/storage/droneStorage.js";
+import { attachBlackboxResult } from "./features/fleet/services/fleetService.js";
 
 import ToolLoadingFallback from "./features/tools/components/ToolLoadingFallback.jsx";
 
@@ -45,7 +48,7 @@ function AppShell({ drones, setDrones, profile, setProfile, lang, setLang, favor
         <Route path="fleet" element={<Fleet drones={drones} setDrones={setDrones} openDrone={(d) => navigate(`/app/fleet/${d.id}`)} />} />
         <Route path="fleet/:id" element={<DroneDetailRoute drones={drones} onBack={() => navigate("/app/fleet")} />} />
         <Route path="fleet/:id/digital-twin" element={<DigitalTwinRoute drones={drones} onBack={() => navigate(-1)} />} />
-        <Route path="tools" element={<Tools favorites={favorites} toggleFavorite={toggleFavorite} />} />
+        <Route path="tools" element={<Tools favorites={favorites} toggleFavorite={toggleFavorite} drones={drones} onAttachBlackbox={(droneId, result, meta) => setDrones((prev) => attachBlackboxResult(prev, droneId, result, meta))} />} />
         <Route path="ai" element={<AIAssistant />} />
         <Route path="community" element={<Community />} />
         <Route
@@ -70,7 +73,7 @@ function AppShell({ drones, setDrones, profile, setProfile, lang, setLang, favor
 
 export default function ObixNexus() {
   const [splashDone, setSplashDone] = useState(false);
-  const [drones, setDrones] = usePersistentState(STORAGE_KEYS.drones, defaultDrones);
+  const [drones, setDrones] = useDroneFleet(defaultDrones);
   const [profile, setProfile] = usePersistentState(STORAGE_KEYS.profile, defaultProfile);
   const [lang, setLang] = usePersistentState(STORAGE_KEYS.lang, "th");
   const [favorites, setFavorites] = usePersistentState(STORAGE_KEYS.favoriteTools, []);
@@ -85,7 +88,9 @@ export default function ObixNexus() {
 
   function handleReset() {
     resetAllLocalData();
-    setDrones(defaultDrones);
+    // Nothing is persisted anymore — loadDrones falls back to the seed
+    // fleet, normalized and tagged as seeded demo data.
+    setDrones(loadDrones(defaultDrones));
     setProfile(defaultProfile);
     setLang("th");
     setFavorites([]);
