@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext js,jsx",
-    "test": "node --test src/lib/fpvEngine.test.js src/lib/blackbox/analyzer.test.js src/features/tools/engines/blackboxAnalyzerAdapter.test.js src/features/tools/registry/registry.test.js"
+    "test": "node --test src/lib/fpvEngine.test.js src/lib/blackbox/analyzer.test.js src/features/tools/engines/blackboxAnalyzerAdapter.test.js src/features/tools/registry/registry.test.js src/features/fleet/model/drone.test.js src/features/fleet/model/historyEvent.test.js src/features/fleet/services/fleetService.test.js src/features/fleet/storage/droneStorage.test.js src/features/ai/services/demoAssistant.test.js"
   },
   "dependencies": {
     "react": "^18.3.1",
