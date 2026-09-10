@@ -5,34 +5,119 @@
 :root {
   color-scheme: dark;
   --obix-bg: #030811;
-  --obix-surface: rgba(11, 25, 40, .72);
+  --obix-bg-2: #06111d;
+  --obix-surface: rgba(10, 20, 33, .78);
+  --obix-surface-strong: rgba(13, 27, 44, .9);
   --obix-line: rgba(148, 163, 184, .14);
+  --obix-line-bright: rgba(34, 211, 238, .24);
   --obix-cyan: #22d3ee;
+  --obix-cyan-soft: rgba(34, 211, 238, .12);
+  --obix-violet: #a78bfa;
+  --obix-safe-bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
 }
 
 html, body, #root { min-height: 100%; }
 html { background: var(--obix-bg); }
 body {
   margin: 0;
+  min-width: 320px;
   background:
-    radial-gradient(circle at 50% -10%, rgba(34,211,238,.09), transparent 38%),
-    linear-gradient(180deg, #030811 0%, #06111d 100%);
+    radial-gradient(circle at 50% -14%, rgba(34,211,238,.11), transparent 34%),
+    radial-gradient(circle at 100% 18%, rgba(99,102,241,.08), transparent 26%),
+    linear-gradient(180deg, var(--obix-bg) 0%, var(--obix-bg-2) 100%);
   color: #f8fafc;
   overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-button, input { font: inherit; }
+button, input, select, textarea { font: inherit; }
 button { -webkit-tap-highlight-color: transparent; }
+button:disabled { opacity: .6; }
 input::placeholder { opacity: .6; }
 
 * { scrollbar-width: thin; scrollbar-color: rgba(148,163,184,.18) transparent; }
 *::-webkit-scrollbar { width: 4px; height: 4px; }
 *::-webkit-scrollbar-thumb { background: rgba(148,163,184,.18); border-radius: 999px; }
 
-.safe-pb { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); }
+::selection { background: rgba(34,211,238,.28); color: white; }
+
+@layer components {
+  .obix-app-frame {
+    position: relative;
+    width: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(34,211,238,.045), transparent 32%),
+      linear-gradient(180deg, rgba(5,11,20,.98), rgba(4,12,21,.995));
+  }
+
+  .obix-screen-scroll {
+    height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-bottom: var(--obix-safe-bottom);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .obix-surface {
+    border: 1px solid var(--obix-line);
+    background: linear-gradient(180deg, rgba(16,29,45,.8), rgba(8,18,30,.82));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 14px 34px rgba(0,0,0,.2);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  .obix-surface-pressable {
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+  }
+
+  .obix-surface-pressable:active { transform: scale(.985); }
+  .obix-surface-pressable:focus-visible {
+    outline: none;
+    border-color: rgba(34,211,238,.5);
+    box-shadow: 0 0 0 2px rgba(34,211,238,.16), 0 18px 36px rgba(0,0,0,.24);
+  }
+
+  .obix-section-label {
+    letter-spacing: -.01em;
+  }
+
+  .obix-muted { color: rgba(255,255,255,.46); }
+  .obix-subtle { color: rgba(255,255,255,.32); }
+  .obix-divider { border-color: rgba(255,255,255,.08); }
+
+  .obix-bottom-nav {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 7px);
+    box-shadow: 0 -18px 40px rgba(0,0,0,.38);
+  }
+
+  .obix-chip { 
+    min-height: 30px;
+    white-space: nowrap;
+  }
+}
+
+.safe-pb { padding-bottom: var(--obix-safe-bottom); }
+
+@media (min-width: 768px) {
+  .obix-app-frame {
+    width: 430px;
+    height: 812px;
+    max-height: 92vh;
+    border-radius: 2rem;
+    border: 1px solid rgba(255,255,255,.1);
+    box-shadow: 0 24px 70px rgba(0,0,0,.45);
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
